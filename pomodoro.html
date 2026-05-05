@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Site para Pomodoro</title>
+  <script > //estilo feito por IA</script>
+  <style>
+    body {
+      background: #f5f5f5;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 20px;
+    }
+
+    h1 { font-size: 1.5rem; color: #333; }
+
+    #display {
+      font-size: 5rem;
+      font-weight: bold;
+      color: #e63900;
+      letter-spacing: 4px;
+    }
+
+    .ajuste {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .ajuste div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .ajuste input {
+      width: 60px;
+      padding: 6px;
+      font-size: 1.2rem;
+      text-align: center;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      font-family: monospace;
+    }
+
+    .ajuste input:focus { outline: none; border-color: #e63900; }
+    .separador { font-size: 2rem; color: #999; margin-top: 8px; }
+
+    .botoes { display: flex; gap: 10px; }
+
+    button {
+      padding: 10px 22px;
+      font-size: 0.9rem;
+      font-family: monospace;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover { background: #333; color: white; }
+
+    #btnIniciar { border-color: #e63900; color: #e63900; }
+    #btnIniciar:hover { background: #e63900; color: white; }
+
+    .ciclos {
+      font-size: 0.9rem;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #btnLimpar { padding: 4px 12px; font-size: 0.75rem; border-color: #aaa; color: #aaa; }
+
+    #popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: white;
+      text-align: center;
+    }
+
+    #popup h2 { font-size: 2rem; }
+    #popup p  { color: #ccc; }
+    #popup button {
+      background: #e63900;
+      color: white;
+      border-color: #e63900;
+      padding: 12px 30px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+
+
+
+
+
+
+  <h1>Rastreador de Foco - Pomodoro</h1>
+
+  <div id="display">00:25:00</div>
+
+  <div class="ajuste">
+    <div>
+      <span>Horas</span>
+      <input type="number" id="inputHoras" value="0" min="0" max="23">
+    </div>
+    <div class="separador">:</div>
+    <div>
+      <span>Minutos</span>
+      <input type="number" id="inputMinutos" value="25" min="0" max="59">
+    </div>
+    <div class="separador">:</div>
+    <div>
+      <span>Segundos</span>
+      <input type="number" id="inputSegundos" value="0" min="0" max="59">
+    </div>
+  </div>
+
+  <div class="botoes">
+    <button id="btnIniciar" onclick="iniciar()">▶ Iniciar</button>
+    <button onclick="pausar()">⏸ Pausar</button>
+    <button onclick="reiniciar()">↺ Reiniciar</button>
+  </div>
+
+  <div class="ciclos">
+    Ciclos: <strong id="ciclos">0</strong>
+    <button id="btnLimpar" onclick="limparCiclos()">Limpar</button>
+  </div>
+  <div id="popup">
+    <script > //Pop up feito por Ia para ficar mais bonito</script>
+    <h2>⏰ Parabens pela conclusão de sua Meta!</h2> 
+    <p>Ciclo Pomodoro concluido! Hora de descansar.</p>
+    <button onclick="fecharPopup()">OK</button>
+  </div>
+
+  <script>
+    let tempo = 25 * 60; //tempo em segundos
+    let intervalo = null;
+    let rodando = false;  //verificar se esta rodando 
+    let ciclos = 0;       //quantos ciclos completou
+
+    //tempo no formato normal
+    function mostrarTempo() {
+      let h = Math.floor(tempo / 3600);
+      let m = Math.floor((tempo % 3600) / 60);
+      let s = tempo % 60;
+      // padStart(2,'0') garante dois dígitos: 5 vira "05"
+      //parte feita pelo gemini, n tava conseguindo fazer 
+      document.getElementById('display').textContent =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+         }
+
+
+
+
+
+
+
+    //3 inputs e converte para segundos totais
+    function lerTempo() {
+      let h = parseInt(document.getElementById('inputHoras').value)    || 0;
+      let m = parseInt(document.getElementById('inputMinutos').value)  || 0;
+      let s = parseInt(document.getElementById('inputSegundos').value) || 0;
+      return (h * 3600) + (m * 60) + s;
+    }
+
+    function iniciar() {
+      if (rodando) return;    // evita iniciar duas vezes
+      tempo = lerTempo();     // pega o tempo dos inputs
+      if (tempo <= 0) return; // não inicia com zero
+
+      rodando = true;
+      // setInterval chama a função a cada 1000ms (1 segundo)
+      intervalo = setInterval(function() {
+        if (tempo > 0) {
+          tempo--;
+          mostrarTempo();
+        } else {
+          //tempo acabou
+          clearInterval(intervalo);
+          rodando = false;
+          ciclos++;
+          document.getElementById('ciclos').textContent = ciclos;
+          abrirPopup();
+        }
+      }, 1000);
+    }
+
+    function pausar() {
+      clearInterval(intervalo); //para sem zerar o tempo
+      rodando = false;
+    }
+
+    function reiniciar() {
+      clearInterval(intervalo);
+      rodando = false;
+      tempo = lerTempo(); //volta ao valor dos inputs
+      mostrarTempo();
+    }
+
+    function limparCiclos() {
+      ciclos = 0;
+      document.getElementById('ciclos').textContent = 0;
+    }
+
+    function abrirPopup() {
+      document.getElementById('popup').style.display = 'flex';
+    }
+
+    function fecharPopup() {
+      document.getElementById('popup').style.display = 'none';
+      reiniciar();
+    }
+
+    //com os inputs, atualiza o display na hora
+    document.querySelectorAll('.ajuste input').forEach(function(input) {
+      input.addEventListener('input', function() {
+        if (!rodando) { //so muda se n rodar
+          tempo = lerTempo();
+          mostrarTempo();
+        }
+      });
+    });
+
+    mostrarTempo(); //carrega o display 
+  </script>
+
+
+
+</body>
+</html>
